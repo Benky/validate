@@ -56,6 +56,13 @@ func AgainstSchema(schema *spec.Schema, data interface{}, formats strfmt.Registr
 //
 // Panics if the provided schema is invalid.
 func NewSchemaValidator(schema *spec.Schema, rootSchema interface{}, root string, formats strfmt.Registry) *SchemaValidator {
+	return NewSchemaValidatorExt(schema, rootSchema, root, formats, false)
+}
+
+// NewSchemaValidator creates a new schema validator.
+//
+// Panics if the provided schema is invalid.
+func NewSchemaValidatorExt(schema *spec.Schema, rootSchema interface{}, root string, formats strfmt.Registry, skipPreCheck bool) *SchemaValidator {
 	if schema == nil {
 		return nil
 	}
@@ -80,7 +87,7 @@ func NewSchemaValidator(schema *spec.Schema, rootSchema interface{}, root string
 		s.numberValidator(),
 		s.sliceValidator(),
 		s.commonValidator(),
-		s.objectValidator(),
+		s.objectValidator(skipPreCheck),
 	}
 	return &s
 }
@@ -223,7 +230,7 @@ func (s *SchemaValidator) schemaPropsValidator() valueValidator {
 	return newSchemaPropsValidator(s.Path, s.in, sch.AllOf, sch.OneOf, sch.AnyOf, sch.Not, sch.Dependencies, s.Root, s.KnownFormats)
 }
 
-func (s *SchemaValidator) objectValidator() valueValidator {
+func (s *SchemaValidator) objectValidator(skipPreCheck bool) valueValidator {
 	return &objectValidator{
 		Path:                 s.Path,
 		In:                   s.in,
@@ -235,5 +242,6 @@ func (s *SchemaValidator) objectValidator() valueValidator {
 		PatternProperties:    s.Schema.PatternProperties,
 		Root:                 s.Root,
 		KnownFormats:         s.KnownFormats,
+		SkipPreCheck:         skipPreCheck,
 	}
 }
